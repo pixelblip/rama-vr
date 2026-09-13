@@ -38,7 +38,7 @@
 <div id="boot"><b>RAMA</b><span id="bootmsg">constructing interior</span><small>Closed cylinder · 16 km across · 50 km long · Quest 2 ready</small></div>
 
 <div id="hint">Click to look · tap Enter VR on Quest · thumbsticks fly · A / X next view</div>
-<button id="enterVR" type="button">Enter VR · 5</button>
+<button id="enterVR" type="button">Enter VR · 6</button>
 <div id="hud" class="hidden">
   <h4>Controls</h4>
   <span class="k">Mouse</span> look around (click to lock)<br>
@@ -503,7 +503,7 @@ function terrainTexture(){
       g.addColorStop(.5,'rgba(255,246,220,.12)');
       g.addColorStop(1,'rgba(255,244,214,0)');
       x.fillStyle=g; x.fillRect(cx+off-half*3,y0,half*6,y1-y0);
-      x.fillStyle='rgba(206,206,198,.45)';
+      x.fillStyle='rgba(206,206,198,.18)';
       x.fillRect(cx+off-half,y0,half*2,y1-y0);
     });
   }
@@ -877,19 +877,20 @@ AFRAME.registerComponent('rama-world',{
 
     msg.textContent='hanging the six suns';
 
-    const sunMat=new THREE.MeshBasicMaterial({color:0xfff8e6,side:THREE.DoubleSide});
+    const sunMat=new THREE.MeshBasicMaterial({color:0xfff8e6,side:THREE.DoubleSide,depthWrite:false,
+      polygonOffset:true,polygonOffsetFactor:-8,polygonOffsetUnits:-8});
     this.sunMat=sunMat;
     const haloMat=new THREE.MeshBasicMaterial({color:0xffe9c0,transparent:true,opacity:.14,
-      blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
+      blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false,side:THREE.DoubleSide});
     this.haloMat=haloMat;
     const sun=(t,z0,z1)=>{
-      const f=new THREE.Mesh(makeBand({r0:R-6,z0,r1:R-6,z1,segT:Q.quest?16:28,segZ:2,
+      const f=new THREE.Mesh(makeBand({r0:R-720,z0,r1:R-720,z1,segT:Q.quest?16:28,segZ:2,
         t0:t-STRIP_T/2,tLen:STRIP_T}),sunMat);
-      f.renderOrder=1; root.add(f);
+      f.renderOrder=1; f.frustumCulled=false; root.add(f);
       if(!Q.quest){
-        const h=new THREE.Mesh(makeBand({r0:R-4,z0:z0-400,r1:R-4,z1:z1+400,segT:24,segZ:2,
+        const h=new THREE.Mesh(makeBand({r0:R-780,z0:z0-400,r1:R-780,z1:z1+400,segT:24,segZ:2,
           t0:t-STRIP_T*.95,tLen:STRIP_T*1.9}),haloMat);
-        h.renderOrder=2; root.add(h);
+        h.renderOrder=2; h.frustumCulled=false; root.add(h);
       }
     };
     for(const t of NORTH_STRIPS) sun(t,-L/2+1200,-SEA_HALF-CLIFF-300);
