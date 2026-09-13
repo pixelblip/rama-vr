@@ -38,7 +38,7 @@
 <div id="boot"><b>RAMA</b><span id="bootmsg">constructing interior</span><small>Closed cylinder · 16 km across · 50 km long · Quest 2 ready</small></div>
 
 <div id="hint">Click to look · tap Enter VR on Quest · thumbsticks fly · A / X next view</div>
-<button id="enterVR" type="button">Enter VR</button>
+<button id="enterVR" type="button">Enter VR · 5</button>
 <div id="hud" class="hidden">
   <h4>Controls</h4>
   <span class="k">Mouse</span> look around (click to lock)<br>
@@ -752,7 +752,9 @@ function lightsFor(kind){
 
 AFRAME.registerComponent('rama-world',{
   init(){
-    const root=this.el.object3D, msg=document.getElementById('bootmsg');
+    this.pivot=new THREE.Group();
+    this.el.object3D.add(this.pivot);
+    const root=this.pivot, msg=document.getElementById('bootmsg');
     this.night=0; this.targetNight=0; this.t=0;
 
     const texEnv=envTexture();
@@ -1579,11 +1581,19 @@ AFRAME.registerComponent('rama-player',{
     this._q.setFromRotationMatrix(this._m);
     this._qy.setFromAxisAngle(this._up,this.yaw);
     this._q.multiply(this._qy);
-    const worldObj=document.getElementById('world').object3D;
-    worldObj.quaternion.copy(this._q).invert();
-    worldObj.position.set(-px,-py,-pz).applyQuaternion(worldObj.quaternion);
+    const pivot=(this.world()&&this.world().pivot)||document.getElementById('world').object3D;
+    pivot.quaternion.copy(this._q).invert();
+    pivot.position.set(-px,-py,-pz).applyQuaternion(pivot.quaternion);
+    pivot.updateMatrix();
     o.position.set(0,0,0);
     o.quaternion.identity();
+    const xr=this.el.sceneEl.renderer&&this.el.sceneEl.renderer.xr;
+    if(this.el.sceneEl.is('vr-mode')&&xr&&xr.getCamera){
+      const apply=cam=>{ if(!cam) return; cam.near=0.15; cam.far=24000; if(cam.updateProjectionMatrix) cam.updateProjectionMatrix(); };
+      const xrCam=xr.getCamera();
+      apply(xrCam);
+      if(xrCam&&xrCam.cameras) xrCam.cameras.forEach(apply);
+    }
 
     const w=this.world();
     if(w){
