@@ -24,14 +24,21 @@
         background:rgba(6,12,20,.45);border:1px solid rgba(150,190,220,.14);border-radius:8px;
         padding:8px 14px;font-size:12px;letter-spacing:.04em;pointer-events:none;}
   .hidden,.a-enter-ar,.a-orientation-modal{display:none !important;}
-  .a-enter-vr{z-index:200 !important;}
+  .a-enter-vr{z-index:10002 !important;}
+  #enterVR{position:fixed;right:16px;bottom:16px;z-index:10003;pointer-events:auto;
+    font:600 15px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    letter-spacing:.06em;text-transform:uppercase;color:#081018;background:#7fd4ff;
+    border:0;border-radius:10px;padding:14px 18px;cursor:pointer;
+    box-shadow:0 8px 24px rgba(0,0,0,.35);}
+  #enterVR:active{transform:scale(.98);}
 </style>
 </head>
 <body>
 
 <div id="boot"><b>RAMA</b><span id="bootmsg">constructing interior</span><small>Closed cylinder · 16 km across · 50 km long · Quest 2 ready</small></div>
 
-<div id="hint">Click to look · Enter VR on Quest · thumbsticks fly · A / X next view</div>
+<div id="hint">Click to look · tap Enter VR on Quest · thumbsticks fly · A / X next view</div>
+<button id="enterVR" type="button">Enter VR</button>
 <div id="hud" class="hidden">
   <h4>Controls</h4>
   <span class="k">Mouse</span> look around (click to lock)<br>
@@ -53,7 +60,7 @@
   fog="type: exponential; color: #9eb6c8; density: 0.000048"
   background="color: #9eb6c8"
   renderer="antialias: true; colorManagement: true; highRefreshRate: true; foveationLevel: 1"
-  webxr="optionalFeatures: local-floor, bounded-floor, high-refresh-rate"
+  webxr="referenceSpaceType: local-floor; optionalFeatures: local-floor, bounded-floor"
   loading-screen="enabled: false"
   vr-mode-ui="enabled: true">
 
@@ -1388,11 +1395,14 @@ AFRAME.registerComponent('rama-player',{
       document.getElementById('hud').classList.add('hidden');
       document.getElementById('tel').classList.add('hidden');
       document.getElementById('hint').classList.add('hidden');
+      document.getElementById('boot').classList.add('hidden');
+      document.getElementById('enterVR').classList.add('hidden');
       const rend=sc.renderer;
       if(rend){ rend.setPixelRatio(1); rend.shadowMap.type=THREE.BasicShadowMap; }
     });
     sc.addEventListener('exit-vr',()=>{
       document.getElementById('head').object3D.position.y=1.6;
+      document.getElementById('enterVR').classList.remove('hidden');
     });
 
     this.tLoc=document.getElementById('t-loc'); this.tAlt=document.getElementById('t-alt');
@@ -1763,6 +1773,20 @@ AFRAME.registerComponent('rama-audio',{
   }
 });
 document.querySelector('a-scene').setAttribute('rama-audio','');
+(function(){
+  const sc=document.querySelector('a-scene');
+  const btn=document.getElementById('enterVR');
+  const go=()=>{
+    if(!sc||!sc.enterVR) return;
+    const p=sc.enterVR();
+    if(p&&p.catch) p.catch(err=>{
+      btn.textContent='VR unavailable';
+      console.warn('enterVR failed',err);
+    });
+  };
+  btn.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); go(); });
+  btn.addEventListener('touchend',e=>{ e.preventDefault(); e.stopPropagation(); go(); },{passive:false});
+})();
 </script>
 </body>
 </html>
