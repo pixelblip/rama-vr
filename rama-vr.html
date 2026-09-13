@@ -67,7 +67,7 @@
   <a-entity id="world" rama-world></a-entity>
 
   <a-entity id="rig" rama-player>
-    <a-entity id="head" camera="near: 0.4; far: 90000; fov: 70"
+    <a-entity id="head" camera="near: 0.15; far: 24000; fov: 70"
               look-controls="pointerLockEnabled: true; touchEnabled: true; magicWindowTrackingEnabled: false"
               position="0 1.6 0"></a-entity>
     <a-entity id="leftHand"  vr-hand="hand: left"></a-entity>
@@ -783,6 +783,7 @@ AFRAME.registerComponent('rama-world',{
     rend.shadowMap.type=Q.quest?THREE.BasicShadowMap:THREE.PCFSoftShadowMap;
     rend.toneMapping=THREE.ACESFilmicToneMapping;
     rend.toneMappingExposure=1.08;
+    rend.setClearColor(0x9eb6c8,1);
     if(Q.quest){
       rend.setPixelRatio(Math.min(window.devicePixelRatio||1, 1.25));
       this.el.sceneEl.setAttribute('renderer','antialias',false);
@@ -1391,14 +1392,21 @@ AFRAME.registerComponent('rama-player',{
     });
 
     sc.addEventListener('enter-vr',()=>{
-      document.getElementById('head').object3D.position.y=0;
+      document.getElementById('head').object3D.position.set(0,0,0);
       document.getElementById('hud').classList.add('hidden');
       document.getElementById('tel').classList.add('hidden');
       document.getElementById('hint').classList.add('hidden');
       document.getElementById('boot').classList.add('hidden');
       document.getElementById('enterVR').classList.add('hidden');
+      if(this.fadeMesh){ this.fadeMesh.visible=false; this.fadeMesh.material.opacity=0; }
       const rend=sc.renderer;
-      if(rend){ rend.setPixelRatio(1); rend.shadowMap.type=THREE.BasicShadowMap; }
+      if(rend){
+        rend.setClearColor(0x9eb6c8,1);
+        if(rend.xr&&rend.xr.getCamera){
+          const xrCam=rend.xr.getCamera();
+          if(xrCam){ xrCam.near=0.15; xrCam.far=24000; if(xrCam.updateProjectionMatrix) xrCam.updateProjectionMatrix(); }
+        }
+      }
     });
     sc.addEventListener('exit-vr',()=>{
       document.getElementById('head').object3D.position.y=1.6;
@@ -1565,12 +1573,17 @@ AFRAME.registerComponent('rama-player',{
 
     const r=surfaceRadius(this.z)-this.alt;
     const s=Math.sin(this.theta), c=Math.cos(this.theta), o=this.el.object3D;
-    o.position.set(r*s,-r*c,this.z);
+    const px=r*s, py=-r*c, pz=this.z;
     this._X.set(c,s,0); this._U.set(-s,c,0);
     this._m.makeBasis(this._X,this._U,this._Zv);
     this._q.setFromRotationMatrix(this._m);
     this._qy.setFromAxisAngle(this._up,this.yaw);
-    o.quaternion.copy(this._q).multiply(this._qy);
+    this._q.multiply(this._qy);
+    const worldObj=document.getElementById('world').object3D;
+    worldObj.quaternion.copy(this._q).invert();
+    worldObj.position.set(-px,-py,-pz).applyQuaternion(worldObj.quaternion);
+    o.position.set(0,0,0);
+    o.quaternion.identity();
 
     const w=this.world();
     if(w){
