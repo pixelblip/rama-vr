@@ -2,3 +2,4 @@
 *.swp
 .vercel
 node_modules/
+.certs/

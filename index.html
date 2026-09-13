@@ -38,7 +38,7 @@
 <div id="boot"><b>RAMA</b><span id="bootmsg">constructing interior</span><small>Closed cylinder · 16 km across · 50 km long · Quest 2 ready</small></div>
 
 <div id="hint">Click to look · tap Enter VR on Quest · thumbsticks fly · A / X next view</div>
-<button id="enterVR" type="button">Enter VR · 7</button>
+<button id="enterVR" type="button">Enter VR · 15</button>
 <div id="hud" class="hidden">
   <h4>Controls</h4>
   <span class="k">Mouse</span> look around (click to lock)<br>
@@ -57,17 +57,17 @@
 
 <a-scene
   light="defaultLightsEnabled: false"
-  fog="type: exponential; color: #9eb6c8; density: 0.000048"
-  background="color: #9eb6c8"
+  fog="type: exponential; color: #c8d8cc; density: 0.000036"
+  background="color: #c8d8cc"
   renderer="antialias: true; colorManagement: true; highRefreshRate: false; foveationLevel: 1"
-  webxr="requiredFeatures: local; optionalFeatures: local-floor, bounded-floor; referenceSpaceType: local"
+  webxr="optionalFeatures: local-floor, bounded-floor"
   loading-screen="enabled: false"
   vr-mode-ui="enabled: true">
 
   <a-entity id="world" rama-world></a-entity>
 
   <a-entity id="rig" rama-player>
-    <a-entity id="head" camera="near: 0.15; far: 24000; fov: 70"
+    <a-entity id="head" camera="near: 0.35; far: 1400; fov: 70"
               look-controls="pointerLockEnabled: true; touchEnabled: true; magicWindowTrackingEnabled: false"
               position="0 1.6 0"></a-entity>
     <a-entity id="leftHand"  vr-hand="hand: left"></a-entity>
@@ -87,7 +87,14 @@
    not an open tube. North has three stairways to the hub; south has the Horns.
    =========================================================================== */
 
-const R=8000, L=50000, CLIFF=500, SEA_R=R+CLIFF, SEA_HALF=5000, CAP_D=3800;
+const R=8000, L=80000, CLIFF=500, SEA_R=R+CLIFF, SEA_HALF=5000, CAP_D=3800;
+const VR_SCALE=0.05;
+const CITY_H=5.2;
+const CITY_W=1.55;
+const SUN_LIFT=2600;
+// Scaled ship is ~3.5 km end-to-end. A 1400 m far-plane cut the south bowl
+// into a flat slab that sat on the camera and never moved.
+const VR_FAR=(L+2*CAP_D)*VR_SCALE+800;
 const TAU=Math.PI*2;
 const STRIP_T=3600/R;
 const NORTH_STRIPS=[0, TAU/3, 2*TAU/3];
@@ -341,7 +348,7 @@ const RIVERS=(function(){
 
 const POIS=[
   {name:'Northern Plain',       t:0.95, z:-19000, alt:90,        yaw:Math.PI},
-  {name:'London',               t:0.70, z:-19000, alt:80,        yaw:0},
+  {name:'London',               t:0.70, z:-19000, alt:28,        yaw:0},
   {name:'Above London',         t:0.70, z:-21000, alt:1500,      yaw:Math.PI},
   {name:'North rivers',         t:0.88, z:-15000, alt:220,       yaw:Math.PI},
   {name:'North cliff, the Sea', t:1.10, z:-5800,  alt:80,        yaw:0},
@@ -682,18 +689,18 @@ function waterNormal(){
 function glassFacade(){
   const S=256,cv=document.createElement('canvas');
   cv.width=cv.height=S;const x=cv.getContext('2d');const r=rng(6161);
-  x.fillStyle='#3d4a52'; x.fillRect(0,0,S,S);
+  x.fillStyle='#6a7a84'; x.fillRect(0,0,S,S);
   for(let cx=0;cx<S;cx+=18){
-    x.fillStyle=`rgba(${40+r()*50|0},${55+r()*45|0},${60+r()*40|0},.95)`;
+    x.fillStyle=`rgba(${70+r()*70|0},${90+r()*60|0},${100+r()*50|0},.95)`;
     x.fillRect(cx,0,16,S);
-    if(r()<.35){ x.fillStyle=`rgba(180,200,210,${.08+r()*.12})`; x.fillRect(cx+1,0,6,S); }
+    if(r()<.45){ x.fillStyle=`rgba(220,236,245,${.16+r()*.2})`; x.fillRect(cx+1,0,6,S); }
   }
   for(let cy=0;cy<S;cy+=10){
-    x.fillStyle='rgba(18,22,26,.7)'; x.fillRect(0,cy,S,2);
-    x.fillStyle='rgba(210,225,235,.08)'; x.fillRect(0,cy+2,S,1);
+    x.fillStyle='rgba(24,30,36,.45)'; x.fillRect(0,cy,S,2);
+    x.fillStyle='rgba(240,248,255,.14)'; x.fillRect(0,cy+2,S,1);
   }
-  for(let i=0;i<90;i++){
-    x.fillStyle=`rgba(8,10,12,${.15+r()*.4})`;
+  for(let i=0;i<70;i++){
+    x.fillStyle=`rgba(12,16,20,${.1+r()*.28})`;
     x.fillRect(((r()*S/18)|0)*18+2, ((r()*S/10)|0)*10+3, 12, 6);
   }
   const t=new THREE.CanvasTexture(cv);
@@ -702,17 +709,17 @@ function glassFacade(){
 function masonryFacade(){
   const S=256,cv=document.createElement('canvas');
   cv.width=cv.height=S;const x=cv.getContext('2d');const r=rng(6171);
-  x.fillStyle='#9a8f80'; x.fillRect(0,0,S,S);
-  for(let i=0;i<700;i++){ const v=130+r()*70|0;
-    x.fillStyle=`rgba(${v},${v-8},${v-18},${.05+r()*.14})`;
+  x.fillStyle='#c4b6a4'; x.fillRect(0,0,S,S);
+  for(let i=0;i<700;i++){ const v=160+r()*70|0;
+    x.fillStyle=`rgba(${v},${v-8},${v-18},${.06+r()*.16})`;
     x.fillRect(r()*S,r()*S,2+r()*16,2+r()*10); }
   const winW=9, winH=11, gapX=17, gapY=18;
   for(let cy=10;cy<S-8;cy+=gapY){
     for(let cx=6;cx<S-6;cx+=gapX){
       if(r()<.08) continue;
-      x.fillStyle=r()<.15?'rgba(28,24,20,.92)':'rgba(42,52,60,.88)';
+      x.fillStyle=r()<.15?'rgba(36,32,28,.88)':'rgba(58,70,80,.82)';
       x.fillRect(cx,cy,winW,winH);
-      if(r()<.25){ x.fillStyle='rgba(255,236,190,.18)'; x.fillRect(cx+1,cy+1,winW-2,winH-3); }
+      if(r()<.42){ x.fillStyle='rgba(255,236,190,.28)'; x.fillRect(cx+1,cy+1,winW-2,winH-3); }
     }
   }
   x.fillStyle='rgba(255,255,255,.07)';
@@ -762,36 +769,37 @@ AFRAME.registerComponent('rama-world',{
     const texPuff=puffTexture(), texWN=Q.waterFx?waterNormal():null;
     this.texWN=texWN;
 
-    const amb=new THREE.AmbientLight(0xe8f2ff, Q.quest?1.15:1.05); root.add(amb); this.amb=amb;
-    const hemi=new THREE.HemisphereLight(0xfff6e8, 0x6a7e58, Q.quest?0.75:0.7);
+    const amb=new THREE.AmbientLight(0xf4f8ff, Q.quest?1.32:1.22); root.add(amb); this.amb=amb;
+    const hemi=new THREE.HemisphereLight(0xfff8ee, 0x7a8e68, Q.quest?0.95:0.88);
     root.add(hemi); this.hemi=hemi;
 
     this.suns=[];
     const addSun=(t,z,intense)=>{
       const pl=new THREE.PointLight(0xfff2d6, intense, 0, 0);
-      pl.position.set((R-1100)*Math.sin(t),-(R-1100)*Math.cos(t),z);
+      pl.position.set((R-SUN_LIFT)*Math.sin(t),-(R-SUN_LIFT)*Math.cos(t),z);
       root.add(pl); this.suns.push(pl);
     };
     if(Q.quest){
-      addSun(NORTH_STRIPS[0],-12000,0.8);
-      addSun(SOUTH_STRIPS[1], 12000,0.8);
+      addSun(NORTH_STRIPS[0],-16000,0.95);
+      addSun(NORTH_STRIPS[1],-8000,0.75);
+      addSun(SOUTH_STRIPS[1], 8000,0.75);
+      addSun(SOUTH_STRIPS[2], 16000,0.95);
     } else {
-      NORTH_STRIPS.forEach(t=>addSun(t,-14000,0.55));
-      SOUTH_STRIPS.forEach(t=>addSun(t, 14000,0.55));
+      NORTH_STRIPS.forEach(t=>addSun(t,-14000,0.72));
+      SOUTH_STRIPS.forEach(t=>addSun(t, 14000,0.72));
     }
 
     const rend=this.el.sceneEl.renderer;
     rend.shadowMap.enabled=true;
     rend.shadowMap.type=Q.quest?THREE.BasicShadowMap:THREE.PCFSoftShadowMap;
     rend.toneMapping=THREE.ACESFilmicToneMapping;
-    rend.toneMappingExposure=1.08;
-    rend.setClearColor(0x9eb6c8,1);
+    rend.toneMappingExposure=1.2;
+    rend.setClearColor(0xc8d8cc,1);
     if(Q.quest){
-      rend.setPixelRatio(Math.min(window.devicePixelRatio||1, 1.25));
-      this.el.sceneEl.setAttribute('renderer','antialias',false);
+      rend.setPixelRatio(1);
     }
 
-    const key=new THREE.DirectionalLight(0xfff6e4, Q.quest?1.15:1.1);
+    const key=new THREE.DirectionalLight(0xfff8ea, Q.quest?1.42:1.32);
     key.castShadow=true;
     key.shadow.mapSize.set(Q.shadow,Q.shadow);
     const sc0=key.shadow.camera;
@@ -811,8 +819,9 @@ AFRAME.registerComponent('rama-world',{
     const texCloud=cloudShadowTexture();
     this.texCloud=texCloud;
     const groundMat=new THREE.MeshBasicMaterial({
-      map:grassTexture(), lightMap:texCloud, lightMapIntensity:1.05,
-      color:0xc5d08a, side:THREE.DoubleSide});
+      map:texGround, lightMap:texCloud, lightMapIntensity:0.62,
+      color:0xf4f7e8, side:THREE.DoubleSide,
+      polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1});
     this.groundMat=groundMat;
     const g1=new THREE.Mesh(makeBand({r0:R,z0:-L/2,r1:R,z1:-SEA_HALF-CLIFF,segT:Q.groundT,segZ:Q.groundZ,
       v0:vOf(-L/2),v1:vOf(-SEA_HALF-CLIFF)}),groundMat);
@@ -840,22 +849,24 @@ AFRAME.registerComponent('rama-world',{
     let waterMat;
     if(Q.waterFx){
       waterMat=new THREE.MeshPhongMaterial({
-        color:0x1578b4, emissive:0x0a3d6a, specular:0xbfefff, shininess:340,
-        envMap:texEnv, reflectivity:0.68, combine:THREE.MixOperation,
+        color:0x0f6eae, emissive:0x083860, specular:0xd8f4ff, shininess:380,
+        envMap:texEnv, reflectivity:0.72, combine:THREE.MixOperation,
         normalMap:texWN, side:THREE.DoubleSide});
       waterMat.normalScale.set(.45,.45);
       waterMat.normalMap.repeat.set(70,20);
     } else {
-      waterMat=new THREE.MeshLambertMaterial({
-        color:0x1784c4, emissive:0x0c4a78, side:THREE.DoubleSide});
+      waterMat=new THREE.MeshPhongMaterial({
+        color:0x1280c2, emissive:0x0a4a82, specular:0xb8e8ff, shininess:220,
+        envMap:texEnv, reflectivity:0.48, combine:THREE.MixOperation,
+        side:THREE.DoubleSide});
     }
     this.waterMat=waterMat;
     const sea=new THREE.Mesh(makeBand({r0:SEA_R,z0:-SEA_HALF,r1:SEA_R,z1:SEA_HALF,segT:Q.waterT,segZ:Q.quest?6:12}),waterMat);
     sea.receiveShadow=true; root.add(sea);
 
     const lakeMat=waterMat.clone();
-    lakeMat.color.setHex(0x1c9ad8);
-    if(lakeMat.emissive) lakeMat.emissive.setHex(0x1468a0);
+    lakeMat.color.setHex(0x14a0e0);
+    if(lakeMat.emissive) lakeMat.emissive.setHex(0x0e70b0);
     if(lakeMat.normalMap&&texWN){
       lakeMat.normalMap=texWN.clone();
       lakeMat.normalMap.wrapS=lakeMat.normalMap.wrapT=THREE.RepeatWrapping;
@@ -865,11 +876,11 @@ AFRAME.registerComponent('rama-world',{
     this.lakeMat=lakeMat;
     const lakeSeg=Q.quest?24:40;
     for(const lk of LAKES){
-      const m=new THREE.Mesh(makeDisc(lk.t,lk.z,lk.a,lk.b,R-0.8,lakeSeg,260),lakeMat);
+      const m=new THREE.Mesh(makeDisc(lk.t,lk.z,lk.a,lk.b,R-22,lakeSeg,260),lakeMat);
       m.receiveShadow=true; root.add(m);
     }
     for(const rv of RIVERS){
-      const g=makeRiver(rv.pts,rv.w*0.5,R-0.85);
+      const g=makeRiver(rv.pts,rv.w*0.5,R-24);
       if(!g) continue;
       const m=new THREE.Mesh(g,lakeMat);
       m.receiveShadow=true; root.add(m);
@@ -877,21 +888,19 @@ AFRAME.registerComponent('rama-world',{
 
     msg.textContent='hanging the six suns';
 
-    const sunMat=new THREE.MeshBasicMaterial({color:0xfff8e6,side:THREE.DoubleSide,depthWrite:false,
-      polygonOffset:true,polygonOffsetFactor:-8,polygonOffsetUnits:-8});
+    const sunMat=new THREE.MeshBasicMaterial({color:0xfff8d8,side:THREE.DoubleSide});
     this.sunMat=sunMat;
-    const haloMat=new THREE.MeshBasicMaterial({color:0xffe9c0,transparent:true,opacity:.14,
-      blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false,side:THREE.DoubleSide});
+    const haloMat=new THREE.MeshBasicMaterial({color:0xffeec8,transparent:true,opacity:.2,
+      blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
     this.haloMat=haloMat;
     const sun=(t,z0,z1)=>{
-      const f=new THREE.Mesh(makeBand({r0:R-720,z0,r1:R-720,z1,segT:Q.quest?16:28,segZ:2,
-        t0:t-STRIP_T/2,tLen:STRIP_T}),sunMat);
+      const span=STRIP_T*0.42;
+      const f=new THREE.Mesh(makeBand({r0:R-SUN_LIFT,z0,r1:R-SUN_LIFT,z1,segT:Q.quest?16:28,segZ:2,
+        t0:t-span/2,tLen:span}),sunMat);
       f.renderOrder=1; f.frustumCulled=false; root.add(f);
-      if(!Q.quest){
-        const h=new THREE.Mesh(makeBand({r0:R-780,z0:z0-400,r1:R-780,z1:z1+400,segT:24,segZ:2,
-          t0:t-STRIP_T*.95,tLen:STRIP_T*1.9}),haloMat);
-        h.renderOrder=2; h.frustumCulled=false; root.add(h);
-      }
+      const h=new THREE.Mesh(makeBand({r0:R-SUN_LIFT-80,z0:z0-400,r1:R-SUN_LIFT-80,z1:z1+400,segT:Q.quest?14:24,segZ:2,
+        t0:t-span*.85,tLen:span*1.7}),haloMat);
+      h.renderOrder=2; h.frustumCulled=false; root.add(h);
     };
     for(const t of NORTH_STRIPS) sun(t,-L/2+1200,-SEA_HALF-CLIFF-300);
     for(const t of SOUTH_STRIPS) sun(t, SEA_HALF+CLIFF+300, L/2-1200);
@@ -900,10 +909,10 @@ AFRAME.registerComponent('rama-world',{
 
     const boxGeo=new THREE.BoxGeometry(1,1,1);
     const glassMat=new THREE.MeshLambertMaterial({map:glassFacade(),emissiveMap:lightsFor('glass'),
-      emissive:0x000000,color:0xffffff});
+      emissive:0x243038,color:0xffffff});
     const concMat=new THREE.MeshLambertMaterial({map:masonryFacade(),emissiveMap:lightsFor('conc'),
-      emissive:0x000000,color:0xffffff});
-    const roofMat=new THREE.MeshLambertMaterial({map:roofTexture(),color:0xffffff});
+      emissive:0x1a1814,color:0xffffff});
+    const roofMat=new THREE.MeshLambertMaterial({map:roofTexture(),color:0xf2efe8});
     this.glassMat=glassMat; this.concMat=concMat;
 
     let lots=0; for(const c of CITIES) lots+=c.blocks;
@@ -918,24 +927,26 @@ AFRAME.registerComponent('rama-world',{
     let gi=0, si2=0, ri=0;
     const cr=rng(1234), col=new THREE.Color();
     const place=(t,z,surf,h,w,d,yaw,glass)=>{
+      h=Math.min(h*CITY_H, SUN_LIFT-420);
+      w*=CITY_W; d*=CITY_W;
       if(h<8||w<8) return;
       const M=surfaceMatrix(t,z,surf-h/2,yaw,w,h,d);
       if(glass){
         if(gi>=cap) return;
         glassMesh.setMatrixAt(gi,M);
         const kind=cr();
-        if(kind<.25) col.setHSL(.08+cr()*.04, .12+cr()*.1, .28+cr()*.1);
-        else if(kind<.55) col.setHSL(.55+cr()*.08, .08+cr()*.1, .32+cr()*.14);
-        else col.setHSL(.62+cr()*.06, .06+cr()*.08, .38+cr()*.12);
+        if(kind<.25) col.setHSL(.08+cr()*.04, .18+cr()*.12, .42+cr()*.14);
+        else if(kind<.55) col.setHSL(.55+cr()*.08, .16+cr()*.14, .48+cr()*.16);
+        else col.setHSL(.62+cr()*.06, .14+cr()*.1, .52+cr()*.14);
         glassMesh.setColorAt(gi,col); gi++;
       } else {
         if(si2>=cap) return;
         concMesh.setMatrixAt(si2,M);
         const kind=cr();
-        if(kind<.3) col.setHSL(.02+cr()*.04, .28+cr()*.2, .38+cr()*.12);
-        else if(kind<.6) col.setHSL(.08+cr()*.05, .12+cr()*.1, .52+cr()*.16);
-        else if(kind<.8) col.setHSL(.1+cr()*.04, .04+cr()*.06, .58+cr()*.14);
-        else col.setHSL(.07+cr()*.03, .06+cr()*.06, .68+cr()*.1);
+        if(kind<.3) col.setHSL(.02+cr()*.04, .32+cr()*.22, .48+cr()*.14);
+        else if(kind<.6) col.setHSL(.08+cr()*.05, .16+cr()*.12, .62+cr()*.16);
+        else if(kind<.8) col.setHSL(.1+cr()*.04, .08+cr()*.08, .68+cr()*.14);
+        else col.setHSL(.07+cr()*.03, .08+cr()*.08, .76+cr()*.1);
         concMesh.setColorAt(si2,col); si2++;
       }
       if(ri<cap){
@@ -1097,6 +1108,7 @@ AFRAME.registerComponent('rama-world',{
     this.treeMat=treeMat; this.bushMat=bushMat;
     root.add(this.trees,this.bushes);
     this._ct=null; this._cz=null;
+    this.seedStaticProps();
 
     this.flyers=[];
     const fg=new THREE.ConeGeometry(10,52,6), fm=new THREE.MeshLambertMaterial({color:0x333a40});
@@ -1161,7 +1173,7 @@ AFRAME.registerComponent('rama-world',{
       let d=Math.abs(wrapPi(st-theta));
       if(d<bd){bd=d;best=st;}
     }
-    const lift=1100;
+    const lift=SUN_LIFT;
     const ls=Math.sin(best), lc=Math.cos(best);
     const lr=Math.max(400, surfaceRadius(z)-alt-lift);
     key.position.set(lr*ls, -lr*lc, z-180);
@@ -1208,30 +1220,51 @@ AFRAME.registerComponent('rama-world',{
     this.bushes.instanceMatrix.needsUpdate=true;
   },
 
+  seedStaticProps(){
+    let ti=0, bi=0;
+    const n=Q.quest?220:360;
+    for(let i=0;i<n*3 && (ti<Q.trees||bi<Q.bushes);i++){
+      const h1=hash(i,17,1), h2=hash(i,17,2), h3=hash(i,17,3);
+      const t=h1*TAU, z=(h2-.5)*(L-10000);
+      if(Math.abs(z)<SEA_HALF+CLIFF+240) continue;
+      if(Math.abs(z)>L/2-1800) continue;
+      if(h3<0.42 && ti<Q.trees){
+        const hh=28+h3*42, rad=hh*.34;
+        this.trees.setMatrixAt(ti++, surfaceMatrix(t,z,R-hh/2,0,rad,hh,rad));
+      } else if(bi<Q.bushes){
+        const hh=2.2+h3*4.2;
+        this.bushes.setMatrixAt(bi++, surfaceMatrix(t,z,R-hh*.4,0,hh*2.4,hh,hh*2.4));
+      }
+    }
+    this.trees.count=ti; this.bushes.count=bi;
+    this.trees.instanceMatrix.needsUpdate=true;
+    this.bushes.instanceMatrix.needsUpdate=true;
+  },
+
   tick(t,dt){
     dt=Math.min(dt||16,100); this.t+=dt/1000;
 
     if(Math.abs(this.night-this.targetNight)>.001){
       this.night+=(this.targetNight-this.night)*Math.min(1,dt/1500);
       const n=this.night, M=(a,b)=>a+(b-a)*n;
-      this.groundMat.color.setRGB(M(.77,.10),M(.82,.13),M(.54,.22));
-      this.cliffMat.color.setRGB(M(.54,.05),M(.51,.06),M(.46,.10));
-      this.capMat.color.setRGB(M(.60,.10),M(.65,.12),M(.69,.16));
+      this.groundMat.color.setRGB(M(.96,.10),M(.97,.13),M(.91,.22));
+      this.cliffMat.color.setRGB(M(.62,.05),M(.58,.06),M(.52,.10));
+      this.capMat.color.setRGB(M(.70,.10),M(.74,.12),M(.78,.16));
       this.sunMat.transparent=true; this.sunMat.opacity=1-n;
-      this.haloMat.opacity=.14*(1-n);
+      this.haloMat.opacity=.22*(1-n);
       this.cloudMat.color.setRGB(M(1,.14),M(1,.17),M(1,.26));
-      this.amb.intensity=M(Q.quest?1.15:1.05,.12);
-      this.hemi.intensity=M(Q.quest?.75:.7,.04);
-      for(const s of this.suns) s.intensity=M(Q.quest?.8:.55,.04);
-      this.keyLight.intensity=M(Q.quest?1.15:1.1,.06);
+      this.amb.intensity=M(Q.quest?1.32:1.22,.12);
+      this.hemi.intensity=M(Q.quest?.95:.88,.04);
+      for(const s of this.suns) s.intensity=M(Q.quest?.95:.72,.04);
+      this.keyLight.intensity=M(Q.quest?1.42:1.32,.06);
       this.waterMat.color.setRGB(M(.082,.02),M(.47,.05),M(.706,.09));
       if(this.waterMat.emissive) this.waterMat.emissive.setRGB(M(.039,.01),M(.239,.03),M(.416,.05));
       this.lakeMat.color.setRGB(M(.11,.02),M(.604,.05),M(.847,.1));
       if(this.lakeMat.emissive) this.lakeMat.emissive.setRGB(M(.078,.01),M(.408,.03),M(.627,.06));
       this.treeMat.color.setRGB(M(.31,.03),M(.48,.05),M(.22,.04));
       this.bushMat.color.setRGB(M(.42,.05),M(.52,.06),M(.28,.04));
-      this.glassMat.emissive.setRGB(n,n,n);
-      this.concMat.emissive.setRGB(n,n,n);
+      this.glassMat.emissive.setRGB(M(.14,1),M(.19,1),M(.22,1));
+      this.concMat.emissive.setRGB(M(.10,1),M(.09,1),M(.08,1));
       const s3=this.el.sceneEl.object3D;
       const r=M(.62,.012),g=M(.71,.026),b=M(.78,.06);
       if(s3.fog) s3.fog.color.setRGB(r,g,b);
@@ -1275,7 +1308,7 @@ AFRAME.registerComponent('rama-world',{
     }
 
     if(this.flareGroup&&this.flares){
-      const vis=this.night<0.88;
+      const vis=this.night<0.88&&!this.el.sceneEl.is('vr-mode');
       this.flareGroup.visible=vis;
       if(vis){
         const ox=0.38+0.03*Math.sin(this.t*0.11);
@@ -1335,7 +1368,7 @@ AFRAME.registerComponent('rama-player',{
   init(){
     const p=POIS[0];
     this.theta=p.t; this.z=p.z; this.alt=p.alt; this.yaw=p.yaw;
-    this.speed=0; this.poi=0; this.night=false; this.snap=true; this.snapArmed=true;
+    this.speed=0; this.poi=0; this.night=false; this.snap=false; this.snapArmed=true;
     this.lx=this.ly=this.rx=this.ry=0;
     this.trigger=false; this.grip=false; this.keys={};
     this.fade=0; this.pending=null;
@@ -1352,6 +1385,9 @@ AFRAME.registerComponent('rama-player',{
       new THREE.MeshBasicMaterial({color:0x000000,side:THREE.BackSide,transparent:true,
         opacity:0,depthTest:false,fog:false}));
     fadeMesh.renderOrder=999; fadeMesh.visible=false; cam.add(fadeMesh); this.fadeMesh=fadeMesh;
+    const mark=new THREE.Mesh(new THREE.SphereGeometry(0.14,12,8),
+      new THREE.MeshBasicMaterial({color:0xffee55,fog:false,depthTest:false}));
+    mark.position.set(0,0,-1.1); mark.visible=false; cam.add(mark); this.vrMark=mark;
 
     window.addEventListener('keydown',e=>{
       this.keys[e.code]=true;
@@ -1403,24 +1439,52 @@ AFRAME.registerComponent('rama-player',{
       document.getElementById('boot').classList.add('hidden');
       document.getElementById('enterVR').classList.add('hidden');
       if(this.fadeMesh){ this.fadeMesh.visible=false; this.fadeMesh.material.opacity=0; }
+      if(this.vrMark) this.vrMark.visible=false;
+      document.getElementById('head').setAttribute('camera','near',0.4);
+      document.getElementById('head').setAttribute('camera','far',VR_FAR);
+      document.getElementById('head').setAttribute('look-controls','enabled',false);
+      const w=this.world();
+      if(w){
+        if(w.flareGroup) w.flareGroup.visible=false;
+        if(w.catcher) w.catcher.visible=false;
+        if(w.amb) w.amb.intensity=1.38;
+        if(w.hemi) w.hemi.intensity=1.08;
+        if(w.keyLight) w.keyLight.intensity=1.52;
+      }
       const rend=sc.renderer;
       if(rend){
-        this._tm=rend.toneMapping; this._sh=rend.shadowMap.enabled;
-        rend.setClearColor(0x9eb6c8,1);
-        rend.toneMapping=THREE.NoToneMapping;
+        this._sh=rend.shadowMap.enabled;
+        rend.setClearColor(0xdceade,1);
+        rend.toneMapping=THREE.ACESFilmicToneMapping;
+        rend.toneMappingExposure=1.32;
         rend.shadowMap.enabled=false;
       }
-      if(sc.object3D.fog) sc.object3D.fog.density=0;
+      if(sc.object3D.fog){ sc.object3D.fog.color.setHex(0xdceade); sc.object3D.fog.density=0.00026; }
+      if(sc.object3D.background&&sc.object3D.background.isColor) sc.object3D.background.setHex(0xdceade);
     });
     sc.addEventListener('exit-vr',()=>{
       document.getElementById('head').object3D.position.y=1.6;
+      document.getElementById('head').setAttribute('camera','near',0.35);
+      document.getElementById('head').setAttribute('camera','far',1400);
+      document.getElementById('head').setAttribute('look-controls','enabled',true);
       document.getElementById('enterVR').classList.remove('hidden');
+      if(this.vrMark) this.vrMark.visible=false;
+      const w=this.world();
+      if(w){
+        if(w.cloudGroup) w.cloudGroup.visible=true;
+        if(w.birds) w.birds.visible=true;
+        if(w.catcher) w.catcher.visible=true;
+        if(w.amb) w.amb.intensity=Q.quest?1.32:1.22;
+        if(w.hemi) w.hemi.intensity=Q.quest?0.95:0.88;
+        if(w.keyLight) w.keyLight.intensity=Q.quest?1.42:1.32;
+      }
       const rend=sc.renderer;
       if(rend){
-        if(this._tm!=null) rend.toneMapping=this._tm;
+        rend.toneMapping=THREE.ACESFilmicToneMapping;
+        rend.toneMappingExposure=1.2;
         if(this._sh!=null) rend.shadowMap.enabled=this._sh;
       }
-      if(sc.object3D.fog) sc.object3D.fog.density=0.000048;
+      if(sc.object3D.fog){ sc.object3D.fog.color.setHex(0xc8d8cc); sc.object3D.fog.density=0.000036; }
     });
 
     this.tLoc=document.getElementById('t-loc'); this.tAlt=document.getElementById('t-alt');
@@ -1440,9 +1504,14 @@ AFRAME.registerComponent('rama-player',{
   toggleCruise(){ this.cruise=!this.cruise; this.syncMode(); },
   toggleNight(){ this.night=!this.night; const w=this.world(); if(w) w.setNight(this.night); },
   nextPOI(){ this.poi=(this.poi+1)%POIS.length; this.go(POIS[this.poi]); this.cruise=false; this.syncMode(); },
-  lookYaw(){
+  facingYaw(){
     const head=document.getElementById('head');
     if(!head) return this.yaw;
+    if(this.el.sceneEl.is('vr-mode')){
+      head.object3D.getWorldDirection(this._fwd);
+      const ct=Math.cos(this.theta), st=Math.sin(this.theta);
+      return Math.atan2(this._fwd.x*ct+this._fwd.y*st, -this._fwd.z);
+    }
     this._fwd.set(0,0,-1).applyQuaternion(head.object3D.quaternion);
     return this.yaw+Math.atan2(this._fwd.x,-this._fwd.z);
   },
@@ -1509,16 +1578,20 @@ AFRAME.registerComponent('rama-player',{
         this.pending=null;
       }
     } else if(this.fade>0) this.fade=Math.max(0,this.fade-dt*2.2);
-    this.fadeMesh.material.opacity=this.fade;
-    this.fadeMesh.visible=this.fade>.001;
+    const vrNow=this.el.sceneEl.is('vr-mode');
+    if(vrNow){ this.fadeMesh.visible=false; this.fadeMesh.material.opacity=0; }
+    else {
+      this.fadeMesh.material.opacity=this.fade;
+      this.fadeMesh.visible=this.fade>.001;
+    }
 
     const dz=v=>Math.abs(v)<.15?0:(v-Math.sign(v)*.15)/.85;
-    let mx=dz(this.lx), my=dz(this.ly);
+    let mx=0, my=dz(-this.ly);
     if(k.KeyW||k.ArrowUp)   my=-1;
     if(k.KeyS||k.ArrowDown) my= 1;
     if(k.KeyA) mx=-1;
     if(k.KeyD) mx= 1;
-    let turn=dz(this.rx), vert=dz(this.ry);
+    let turn=dz(this.lx)+dz(this.rx), vert=dz(this.ry);
     if(k.KeyQ) turn=-1; if(k.KeyE) turn=1;
     if(k.KeyR) vert=-1; if(k.KeyF) vert=1;
 
@@ -1537,6 +1610,7 @@ AFRAME.registerComponent('rama-player',{
       this.offA=Math.max(-80,Math.min(220,this.offA));
       this.theta=now.t+this.offT; this.z=now.z; this.alt=Math.max(8,now.alt+this.offA);
       this.yaw+=wrapPi(desired-this.yaw)*Math.min(1,dt*1.8);
+      this.yaw-=turn*2.15*dt;
       const pathLen=this._pathLen || (this._pathLen=(()=>{
         let s=0; for(let i=0;i<CRUISE.length;i++){
           const a=CRUISE[i], b=CRUISE[(i+1)%CRUISE.length];
@@ -1554,17 +1628,18 @@ AFRAME.registerComponent('rama-player',{
       const vr=this.el.sceneEl.is('vr-mode');
       const boost=(this.grip||k.Space)?(vr?5.5:40):((this.trigger||k.ShiftLeft||k.ShiftRight)?(vr?2.2:8):1);
       const mag=Math.min(1,Math.hypot(mx,my));
-      this.speed+=((vr?90:22)*boost*mag-this.speed)*Math.min(1,dt*(mag>0?1.4:5));
+      // World units * VR_SCALE = metres in the headset. 90 m/s was a crawl.
+      this.speed+=((vr?520:22)*boost*mag-this.speed)*Math.min(1,dt*(mag>0?1.4:5));
       if(this.speed<.02) this.speed=0;
 
       if(this.snap){
         if(Math.abs(turn)>.65&&this.snapArmed){ this.yaw-=Math.sign(turn)*Math.PI/6; this.snapArmed=false; }
         if(Math.abs(turn)<.3) this.snapArmed=true;
-      } else this.yaw-=turn*1.7*dt;
+      } else this.yaw-=turn*2.15*dt;
 
       const move=this.speed*dt, hyp=Math.hypot(mx,my);
       if(move>0&&hyp>0){
-        const yaw=this.lookYaw();
+        const yaw=this.facingYaw();
         const cy=Math.cos(yaw), sy=Math.sin(yaw);
         const vx=mx/hyp, vz=my/hyp;
         const wx=vx*cy+vz*sy, wz=-vx*sy+vz*cy;
@@ -1591,18 +1666,22 @@ AFRAME.registerComponent('rama-player',{
     this._q.multiply(this._qy);
     const pivot=(this.world()&&this.world().pivot)||document.getElementById('world').object3D;
     const vr=this.el.sceneEl.is('vr-mode');
-    const S=vr?0.05:1;
-    pivot.quaternion.copy(this._q).invert();
+    const S=vr?VR_SCALE:1;
     pivot.scale.setScalar(S);
-    pivot.position.set(-px,-py,-pz).applyQuaternion(pivot.quaternion).multiplyScalar(S);
-    pivot.updateMatrix();
-    pivot.updateMatrixWorld(true);
-    o.position.set(0,0,0);
-    o.quaternion.identity();
+    pivot.quaternion.identity();
+    if(vr){
+      pivot.position.set(-px*S,-py*S,-pz*S);
+      o.position.set(0,0,0);
+    } else {
+      pivot.position.set(0,0,0);
+      o.position.set(px,py,pz);
+    }
+    o.quaternion.copy(this._q);
+    o.updateMatrix();
 
     const w=this.world();
     if(w){
-      if(w.updateProps) w.updateProps(this.theta,this.z,this.alt);
+      if(!vr && w.updateProps) w.updateProps(this.theta,this.z,this.alt);
       if(w.updateLight) w.updateLight(this.theta,this.z,this.alt);
     }
 
@@ -1826,27 +1905,12 @@ document.querySelector('a-scene').setAttribute('rama-audio','');
     btn.textContent='Starting…';
     prepXR();
     try{
+      if(sc.renderer&&sc.renderer.xr) sc.renderer.xr.enabled=true;
       await sc.enterVR();
       btn.classList.add('hidden');
     }catch(err){
-      try{
-        if(!navigator.xr) throw err;
-        const session=await navigator.xr.requestSession('immersive-vr',{
-          optionalFeatures:['local-floor','bounded-floor']
-        });
-        const xr=sc.renderer.xr;
-        xr.enabled=true;
-        xr.setReferenceSpaceType('local');
-        await xr.setSession(session);
-        sc.xrSession=session;
-        session.addEventListener('end',()=>sc.exitVR&&sc.exitVR());
-        sc.addState('vr-mode');
-        sc.emit('enter-vr',{target:sc});
-        btn.classList.add('hidden');
-      }catch(err2){
-        console.warn('enterVR failed',err,err2);
-        btn.textContent=failText(err2||err);
-      }
+      console.warn('enterVR failed',err);
+      btn.textContent=failText(err);
     }finally{
       busy=false;
     }
