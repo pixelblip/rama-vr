@@ -1,0 +1,17 @@
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Permissions-Policy",
+          "value": "xr-spatial-tracking=(self), accelerometer=(self), gyroscope=(self), magnetometer=(self)"
+        },
+        {
+          "key": "Feature-Policy",
+          "value": "xr-spatial-tracking 'self'; accelerometer 'self'; gyroscope 'self'"
+        }
+      ]
+    }
+  ]
+}

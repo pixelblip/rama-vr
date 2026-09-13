@@ -60,7 +60,7 @@
   fog="type: exponential; color: #9eb6c8; density: 0.000048"
   background="color: #9eb6c8"
   renderer="antialias: true; colorManagement: true; highRefreshRate: true; foveationLevel: 1"
-  webxr="referenceSpaceType: local-floor; optionalFeatures: local-floor, bounded-floor"
+  webxr="requiredFeatures: local; optionalFeatures: local-floor, bounded-floor; referenceSpaceType: local"
   loading-screen="enabled: false"
   vr-mode-ui="enabled: true">
 
@@ -1776,16 +1776,54 @@ document.querySelector('a-scene').setAttribute('rama-audio','');
 (function(){
   const sc=document.querySelector('a-scene');
   const btn=document.getElementById('enterVR');
-  const go=()=>{
-    if(!sc||!sc.enterVR) return;
-    const p=sc.enterVR();
-    if(p&&p.catch) p.catch(err=>{
-      btn.textContent='VR unavailable';
-      console.warn('enterVR failed',err);
-    });
-  };
-  btn.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); go(); });
-  btn.addEventListener('touchend',e=>{ e.preventDefault(); e.stopPropagation(); go(); },{passive:false});
+  let busy=false;
+  function prepXR(){
+    const w=sc.systems&&sc.systems.webxr;
+    if(!w) return;
+    w.sessionReferenceSpaceType='local';
+    w.sessionConfiguration.requiredFeatures=['local'];
+    w.sessionConfiguration.optionalFeatures=['local-floor','bounded-floor'];
+  }
+  function failText(err){
+    const raw=(err&&((err.cause&&err.cause.message)||err.message))||'';
+    if(/NotAllowed|gesture|activat|secure/i.test(raw)) return 'Tap again';
+    if(/InvalidState|pending|existing/i.test(raw)) return 'Starting…';
+    return raw&&raw.length<36?raw:'VR blocked';
+  }
+  async function enter(e){
+    e.preventDefault();
+    e.stopPropagation();
+    if(busy||!sc||sc.is('vr-mode')) return;
+    busy=true;
+    btn.textContent='Starting…';
+    prepXR();
+    try{
+      await sc.enterVR();
+      btn.classList.add('hidden');
+    }catch(err){
+      try{
+        if(!navigator.xr) throw err;
+        const session=await navigator.xr.requestSession('immersive-vr',{
+          optionalFeatures:['local-floor','bounded-floor']
+        });
+        const xr=sc.renderer.xr;
+        xr.enabled=true;
+        xr.setReferenceSpaceType('local');
+        await xr.setSession(session);
+        sc.xrSession=session;
+        session.addEventListener('end',()=>sc.exitVR&&sc.exitVR());
+        sc.addState('vr-mode');
+        sc.emit('enter-vr',{target:sc});
+        btn.classList.add('hidden');
+      }catch(err2){
+        console.warn('enterVR failed',err,err2);
+        btn.textContent=failText(err2||err);
+      }
+    }finally{
+      busy=false;
+    }
+  }
+  btn.addEventListener('click',enter);
 })();
 </script>
 </body>
