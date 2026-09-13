@@ -38,7 +38,7 @@
 <div id="boot"><b>RAMA</b><span id="bootmsg">constructing interior</span><small>Closed cylinder · 16 km across · 50 km long · Quest 2 ready</small></div>
 
 <div id="hint">Click to look · tap Enter VR on Quest · thumbsticks fly · A / X next view</div>
-<button id="enterVR" type="button">Enter VR · 6</button>
+<button id="enterVR" type="button">Enter VR · 7</button>
 <div id="hud" class="hidden">
   <h4>Controls</h4>
   <span class="k">Mouse</span> look around (click to lock)<br>
@@ -59,7 +59,7 @@
   light="defaultLightsEnabled: false"
   fog="type: exponential; color: #9eb6c8; density: 0.000048"
   background="color: #9eb6c8"
-  renderer="antialias: true; colorManagement: true; highRefreshRate: true; foveationLevel: 1"
+  renderer="antialias: true; colorManagement: true; highRefreshRate: false; foveationLevel: 1"
   webxr="requiredFeatures: local; optionalFeatures: local-floor, bounded-floor; referenceSpaceType: local"
   loading-screen="enabled: false"
   vr-mode-ui="enabled: true">
@@ -1145,6 +1145,7 @@ AFRAME.registerComponent('rama-world',{
     ];
     this._sunW=new THREE.Vector3(); this._camW=new THREE.Vector3(); this._loc=new THREE.Vector3();
 
+    root.traverse(o=>{ o.frustumCulled=false; });
     this.el.sceneEl.emit('rama-ready');
     document.getElementById('boot').classList.add('hidden');
   },
@@ -1404,16 +1405,22 @@ AFRAME.registerComponent('rama-player',{
       if(this.fadeMesh){ this.fadeMesh.visible=false; this.fadeMesh.material.opacity=0; }
       const rend=sc.renderer;
       if(rend){
+        this._tm=rend.toneMapping; this._sh=rend.shadowMap.enabled;
         rend.setClearColor(0x9eb6c8,1);
-        if(rend.xr&&rend.xr.getCamera){
-          const xrCam=rend.xr.getCamera();
-          if(xrCam){ xrCam.near=0.15; xrCam.far=24000; if(xrCam.updateProjectionMatrix) xrCam.updateProjectionMatrix(); }
-        }
+        rend.toneMapping=THREE.NoToneMapping;
+        rend.shadowMap.enabled=false;
       }
+      if(sc.object3D.fog) sc.object3D.fog.density=0;
     });
     sc.addEventListener('exit-vr',()=>{
       document.getElementById('head').object3D.position.y=1.6;
       document.getElementById('enterVR').classList.remove('hidden');
+      const rend=sc.renderer;
+      if(rend){
+        if(this._tm!=null) rend.toneMapping=this._tm;
+        if(this._sh!=null) rend.shadowMap.enabled=this._sh;
+      }
+      if(sc.object3D.fog) sc.object3D.fog.density=0.000048;
     });
 
     this.tLoc=document.getElementById('t-loc'); this.tAlt=document.getElementById('t-alt');
@@ -1583,18 +1590,15 @@ AFRAME.registerComponent('rama-player',{
     this._qy.setFromAxisAngle(this._up,this.yaw);
     this._q.multiply(this._qy);
     const pivot=(this.world()&&this.world().pivot)||document.getElementById('world').object3D;
+    const vr=this.el.sceneEl.is('vr-mode');
+    const S=vr?0.05:1;
     pivot.quaternion.copy(this._q).invert();
-    pivot.position.set(-px,-py,-pz).applyQuaternion(pivot.quaternion);
+    pivot.scale.setScalar(S);
+    pivot.position.set(-px,-py,-pz).applyQuaternion(pivot.quaternion).multiplyScalar(S);
     pivot.updateMatrix();
+    pivot.updateMatrixWorld(true);
     o.position.set(0,0,0);
     o.quaternion.identity();
-    const xr=this.el.sceneEl.renderer&&this.el.sceneEl.renderer.xr;
-    if(this.el.sceneEl.is('vr-mode')&&xr&&xr.getCamera){
-      const apply=cam=>{ if(!cam) return; cam.near=0.15; cam.far=24000; if(cam.updateProjectionMatrix) cam.updateProjectionMatrix(); };
-      const xrCam=xr.getCamera();
-      apply(xrCam);
-      if(xrCam&&xrCam.cameras) xrCam.cameras.forEach(apply);
-    }
 
     const w=this.world();
     if(w){
